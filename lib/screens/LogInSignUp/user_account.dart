@@ -418,7 +418,10 @@ class _UserAccountState extends State<UserAccount> {
                 delay: const Duration(milliseconds: 1500),
                 child: GestureDetector(
                   onTap: () {
-                    // Handle Wishlist tap
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: ((context) => const MyOrders())));
                   },
                   child: const Text(
                     "Give Feedback",

@@ -8,6 +8,9 @@ class BaseModel {
   late int value;
   late int selectedSize;
   late int selectedColor;
+  final String type;
+  final String color;
+  final String season;
 
   BaseModel({
     required this.id,
@@ -19,19 +22,31 @@ class BaseModel {
     required this.value,
     required this.selectedSize,
     required this.selectedColor,
+    required this.type,
+    required this.color, 
+    required this.season,
   });
 
   factory BaseModel.fromMap(Map<String, dynamic> map) {
     return BaseModel(
       id: map['id'] as int,
-      imageUrl: map['imageUrl'] as String,
-      name: map['name'] as String,
-      category: map['category'] as String,
-      price: (map['price'] as num).toDouble(),
-      review: (map['review'] as num).toDouble(),
-      value: map['value'] as int,
-      selectedSize: map['selectedSize'] as int,
-      selectedColor: map['selectedColor'] as int,
+      imageUrl:
+          map['imageUrl'] as String? ?? '', // Provide a default value if null
+      name: map['name'] as String? ?? '', // Provide a default value if null
+      category:
+          map['category'] as String? ?? '', // Provide a default value if null
+      price: (map['price'] as num?)?.toDouble() ??
+          0.0, // Provide a default value if null
+      review: (map['review'] as num?)?.toDouble() ??
+          0.0, // Provide a default value if null
+      value: map['value'] as int? ?? 0, // Provide a default value if null
+      selectedSize:
+          map['selectedSize'] as int? ?? 0, // Provide a default value if null
+      selectedColor:
+          map['selectedColor'] as int? ?? 0, // Provide a default value if null
+      type: map['type'] as String? ?? '',
+      color: map['color'] as String? ?? '',
+      season: map['season'] as String? ?? '',  // Provide a default value if null
     );
   }
 
@@ -46,6 +61,26 @@ class BaseModel {
       'value': value,
       'selectedSize': selectedSize,
       'selectedColor': selectedColor,
+      'type': type,
+      'color': color,
+      'season': season
     };
+  }
+
+  factory BaseModel.fromJson(Map<String, dynamic> json) {
+    return BaseModel(
+      id: json['id'] as int,
+      imageUrl: json['imageUrl'] as String,
+      type: json['type'] as String,
+      value: json['value'] as int,
+      price: json['price'] as double,
+      category: json['category'] as String,
+      color: json['color'] as String,
+      selectedSize: json['selectedSize'] as int,
+      selectedColor: json['selectedColor'] as int,
+      name: json['name'] as String,
+      review: json['review'] as double,
+      season: json['season'] as String, 
+    );
   }
 }

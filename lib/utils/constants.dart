@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const Color primaryColor = Color(0xfff9985f);
+const Color primaryColor = Color.fromARGB(255, 101, 156, 250);
 
 List<String> sizes = ["S", "M", "L", "XL", "XLL"];
 List<Color> colors = const [
@@ -14,9 +14,9 @@ List<Color> colors = const [
 ];
 
 List<Color> gradient = const [
-  Colors.white,
-  Colors.white,
-  Color.fromARGB(176, 255, 255, 255),
+  Colors.blue,
+  Colors.blue,
+  Color.fromARGB(175, 0, 175, 250),
   Color.fromARGB(92, 255, 255, 255),
   Color.fromARGB(0, 255, 255, 255),
 ];

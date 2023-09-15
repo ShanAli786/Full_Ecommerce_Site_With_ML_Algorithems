@@ -23,6 +23,7 @@ class _DashboardState extends State<Dashboard> {
     var textTheme = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.black),
         backgroundColor: Colors.white,
         elevation: 0,
         title: FadeIn(

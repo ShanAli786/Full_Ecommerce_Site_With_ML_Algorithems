@@ -1,16 +1,17 @@
-// ignore_for_file: prefer_const_declarations, no_leading_underscores_for_local_identifiers, avoid_function_literals_in_foreach_calls, avoid_print, await_only_futures, unused_local_variable
+// ignore_for_file: prefer_const_declarations, no_leading_underscores_for_local_identifiers, avoid_function_literals_in_foreach_calls, avoid_print, await_only_futures, unused_local_variable, depend_on_referenced_packages
 
 import 'package:animate_do/animate_do.dart';
-import 'package:bottom_bar_matu/bottom_bar_matu.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart';
 
 import '../../main_wrapper.dart';
 import '../../model/order_model.dart';
-import '../../utils/constants.dart';
+
 import '../category/category.dart';
+import '../search/search.dart';
 
 class MyOrders extends StatefulWidget {
   const MyOrders({super.key});
@@ -32,12 +33,18 @@ class _MyOrdersState extends State<MyOrders> {
           .collection('orders')
           .doc(user?.email)
           .collection("data")
+          .where('isCompleted',
+              isEqualTo: false) // Filter for isCompleted = false
           .get();
 
       snapshot.docs.forEach((doc) {
         RecentOrder product = RecentOrder.fromMap(doc.data());
         products.add(product);
       });
+
+      // Sort the products list by dateTime in descending order (latest first)
+      products.sort((a, b) => b.dateTime.compareTo(a.dateTime));
+
       print("Data Fetched Successful");
     } catch (e) {
       print('Error fetching data: $e');
@@ -60,25 +67,74 @@ class _MyOrdersState extends State<MyOrders> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      bottomNavigationBar: _buildNavBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                FadeIn(
-                  delay: const Duration(milliseconds: 400),
-                  child: const Text(
-                    "Recent Orders",
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color.fromARGB(
+            109, 0, 140, 255), // Make the background transparent
+        elevation: 0, // Remove the shadow
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.category), label: 'Category'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+        currentIndex: 3,
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MainWrapper(
+                  isUserLoggedIn: true,
+                ),
+              ),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CategoryScreen(
+                  isUserLoggedIn: true,
+                ),
+              ),
+            );
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const Search(),
+              ),
+            );
+          }
+        },
+
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.black,
+        type: BottomNavigationBarType.fixed,
+        iconSize: 20,
+      ),
+      body: Stack(children: [
+        Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/account_background1.jpg'),
+              fit: BoxFit.cover, // Adjust the fit as needed
+            ),
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  const Text(
+                    "Placed Orders",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                ),
-                const Spacer(),
-                FadeIn(
-                  delay: const Duration(milliseconds: 400),
-                  child: GestureDetector(
+                  const Spacer(),
+                  GestureDetector(
                     onTap: () {
                       showDialog(
                         context: context,
@@ -117,208 +173,94 @@ class _MyOrdersState extends State<MyOrders> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                        color: Colors.black,
                         decoration: TextDecoration.underline,
                       ),
-                    ),
-                  ),
-                ),
-                // Add some space between texts
-              ],
-            ),
-          ),
-          FadeIn(
-            delay: const Duration(milliseconds: 600),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              color: Colors.grey[300],
-              child: Row(
-                children: const [
-                  Expanded(
-                    flex: 1,
-                    child: Text(
-                      "Order#",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Text(
-                      "Items",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Text(
-                      "Size",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Text(
-                      "Color",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Text(
-                      "Quantity",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Text(
-                      "Price",
-                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          Expanded(
-            child: FadeIn(
-              delay: const Duration(milliseconds: 800),
-              child: _recentOrders.isEmpty
-                  ? const Center(
-                      child: Text(
-                        "No orders yet!",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _recentOrders.length,
-                      itemBuilder: (context, index) {
-                        final sizeString =
-                            getSizeString(_recentOrders[index].size);
-                        final colorString =
-                            getColorString(_recentOrders[index].color);
-
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          color:
-                              index % 2 == 0 ? Colors.grey[200] : Colors.white,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 1,
-                                child: Text(
-                                    _recentOrders[index].orderNo.toString()),
-                              ),
-                              Expanded(
-                                flex: 1,
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(4.0),
-                                        child: Image.network(
-                                          _recentOrders[index].itemPic,
-                                          width: 40,
-                                          height: 40,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 1,
-                                child: Text(sizeString),
-                              ),
-                              Expanded(
-                                flex: 1,
-                                child: Text(colorString),
-                              ),
-                              Expanded(
-                                flex: 1,
-                                child: Text(
-                                    _recentOrders[index].quantity.toString()),
-                              ),
-                              Expanded(
-                                flex: 1,
-                                child: Text(
-                                    "\$${_recentOrders[index].totalPrice}"),
-                              ),
-                            ],
+            Expanded(
+              child: FadeIn(
+                delay: const Duration(milliseconds: 800),
+                child: _recentOrders.isEmpty
+                    ? const Center(
+                        child: Text(
+                          "No orders yet!",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _recentOrders.length,
+                        itemBuilder: (context, index) {
+                          final sizeString =
+                              getSizeString(_recentOrders[index].size);
+                          final colorString =
+                              getColorString(_recentOrders[index].color);
+
+                          final formattedDateTime =
+                              DateFormat('yyyy-MM-dd        HH:mm:ss')
+                                  .format(_recentOrders[index].dateTime);
+
+                          return ListTile(
+                            leading: Image.network(
+                              _recentOrders[index].itemPic,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            ),
+                            title: Text(
+                                "Item Name:   ${_recentOrders[index].itemName}"),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Size:               $sizeString"),
+                                Text(
+                                    "Quantity:      ${_recentOrders[index].quantity}"),
+                                Text("Color:              $colorString"),
+                                Text(
+                                    "Price:              \$${_recentOrders[index].totalPrice}"),
+                                Text("Placed On:    $formattedDateTime"),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ]),
     );
   }
 
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+      backgroundColor: const Color.fromARGB(117, 0, 157, 255),
       centerTitle: true,
-      title: FadeIn(
-        delay: const Duration(milliseconds: 200),
-        child: const Text(
-          "My Orders",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
+      title: const Text(
+        "Placed Orders",
+        style: TextStyle(
+          fontSize: 25,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
         ),
       ),
       leading: IconButton(
         onPressed: () {
-          Navigator.pop(context);
+          Navigator.pop(
+            context,
+          );
         },
         icon: const Icon(
-          Icons.arrow_back_rounded,
-          color: Colors.black,
+          Icons.arrow_back_ios_new_outlined,
+          color: Colors.white,
         ),
       ),
-    );
-  }
-
-  BottomBarBubble _buildNavBar() {
-    final int _index = 2;
-    return BottomBarBubble(
-      color: primaryColor,
-      selectedIndex: _index,
-      items: [
-        BottomBarItem(iconData: Icons.home),
-        BottomBarItem(iconData: Icons.category),
-        BottomBarItem(iconData: Icons.person),
-      ],
-      onSelect: (index) {
-        if (index == 0) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const MainWrapper(isUserLoggedIn: true),
-            ),
-          );
-        } else if (index == 1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CategoryScreen(
-                isUserLoggedIn: true,
-              ),
-            ),
-          );
-        }
-      },
     );
   }
 

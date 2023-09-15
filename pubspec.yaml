@@ -43,6 +43,17 @@ dependencies:
   get: ^4.6.5
   image_compare: ^1.1.2
   path_provider: ^2.1.0
+  flutter_email_sender: ^5.1.0
+  firebase_analytics: ^10.4.5
+  intl: ^0.18.1
+  flutter_rating_bar: ^4.0.1
+  vector_math: ^2.1.4
+  google_fonts: ^4.0.4
+  flutter_spinkit: ^5.2.0
+  device_info_plus: ^9.0.3
+  shared_preferences: ^2.2.1
+  video_player: ^2.7.1
+  flutter_launcher_icons: ^0.9.0
   
 
   
@@ -61,12 +72,18 @@ flutter:
   assets:
     - assets/images/
     - assets/models/
-
+    - assets/
+    - assets/videos/demovideo.mp4
   fonts:
     - family: AlegreyaSans
       fonts:
         - asset: assets/fonts/AlegreyaSans-Bold.ttf
         - asset: assets/fonts/AlegreyaSans-Medium.ttf
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"  # Replace with your icon's path
 
 
   

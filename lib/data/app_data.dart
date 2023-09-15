@@ -8,7 +8,7 @@ List<CategoriesModel> categories = [
   ),
   CategoriesModel(
     imageUrl: "assets/images/kids.jpg",
-    title: "Kids",
+    title: "Kid",
   ),
   CategoriesModel(
     imageUrl: "assets/images/mens.jpg",
@@ -31,6 +31,9 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
   ),
   BaseModel(
     imageUrl: "assets/images/blazer.jpg",
@@ -42,6 +45,9 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
   ),
   BaseModel(
     imageUrl: "assets/images/jacjket.jpg",
@@ -53,6 +59,9 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
   ),
   BaseModel(
     imageUrl: "assets/images/shirt.jpg",
@@ -64,6 +73,9 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
   ),
   BaseModel(
     imageUrl: "assets/images/sw.jpg",
@@ -75,6 +87,9 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
   ),
   BaseModel(
     imageUrl: "assets/images/women.jpg",
@@ -86,6 +101,9 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
   ),
   BaseModel(
     imageUrl: "assets/images/womens.jpg",
@@ -97,6 +115,9 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
   ),
   BaseModel(
     imageUrl: "assets/images/t-shirt.jpg",
@@ -108,6 +129,9 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
   ),
   BaseModel(
     imageUrl: "assets/images/womens.jpg",
@@ -119,6 +143,10 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
+
   ),
   BaseModel(
     imageUrl: "assets/images/t-shirt.jpg",
@@ -130,6 +158,9 @@ List<BaseModel> mainList = [
     value: 1,
     selectedColor: 1,
     selectedSize: 1,
+    type: "None", 
+    color: "None",
+    season: 'None', 
   ),
 ];
 

@@ -8,6 +8,7 @@ import 'package:animate_do/animate_do.dart';
 import '../../main_wrapper.dart';
 import '../../utils/constants.dart';
 import '../category/category.dart';
+import '../search/search.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -17,7 +18,7 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
-  final int _index = 2;
+  final int _index = 3;
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -27,6 +28,8 @@ class _SignUpState extends State<SignUp> {
 
   bool _isLoading = false;
   bool isUserLoggedIn = false;
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   @override
   void dispose() {
@@ -38,35 +41,37 @@ class _SignUpState extends State<SignUp> {
   }
 
   Future<void> _createAccountWithEmailAndPassword() async {
-    final String username = _usernameController.text.trim();
-    final String email = _emailController.text.trim();
-    final String password = _passwordController.text;
+  final String username = _usernameController.text.trim();
+  final String email = _emailController.text.trim();
+  final String password = _passwordController.text;
 
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true; // Show the progress indicator
-      });
-      try {
-        final FirebaseAuth auth = FirebaseAuth.instance;
-        final UserCredential userCredential = await auth
-            .createUserWithEmailAndPassword(email: email, password: password);
+  if (_formKey.currentState!.validate()) {
+    setState(() {
+      _isLoading = true; // Show the progress indicator
+    });
 
-        // Save the username as a user property in Firebase Auth
-        User? user = userCredential.user;
-        if (user != null) {
-          await user.updateProfile(displayName: username);
-          await user
-              .reload(); // Reload the user object to ensure the property is updated
+    try {
+      final FirebaseAuth auth = FirebaseAuth.instance;
+      final UserCredential userCredential = await auth
+          .createUserWithEmailAndPassword(email: email, password: password);
+      bool isVerified = auth.currentUser!.emailVerified;
+      // Send email verification
+      User? user = userCredential.user;
+      if (user != null) {
+        try{
+        await user.sendEmailVerification();
+        } catch(e){
+          print('Email Verification Error: $e');
         }
-
+        auth.signOut();
         // Display a success message
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: const Text('Account Created'),
-              content:
-                  const Text('Your account has been successfully created.'),
+              title: const Text('Account Verification'),
+              content: const Text(
+                  'Please check your email for a verification link.'),
               actions: <Widget>[
                 TextButton(
                   child: const Text('OK'),
@@ -84,35 +89,51 @@ class _SignUpState extends State<SignUp> {
         _emailController.clear();
         _passwordController.clear();
         _confirmPasswordController.clear();
-      } catch (e) {
-        // Handle sign-up error
-        print('Sign-up error: $e');
-      } finally {
-        setState(() {
-          _isLoading = false; // Hide the progress indicator
-        });
       }
+    } catch (e) {
+      // Handle sign-up error
+      print('Sign-up error: $e');
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Sign Up Error!'),
+              content:  Text('$e'),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide the progress indicator
+      });
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "Sign Up",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
+      appBar: _buildAppBar(context),
+      body: Stack(children: [
+        Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/account_background1.jpg'),
+              fit: BoxFit.cover, // Adjust the fit as needed
+            ),
           ),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.all(16),
+        SingleChildScrollView(
           child: Form(
             key: _formKey,
             child: Column(
@@ -120,45 +141,70 @@ class _SignUpState extends State<SignUp> {
               children: [
                 FadeIn(
                   delay: const Duration(milliseconds: 300),
-                  child: const Center(
+                  child: Center(
                     child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                      child: Text(
-                        'Create Your Account',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 10),
+                      child: Image.asset(
+                        'assets/logo.png', // Replace 'logo.png' with your image asset path
+                        width: 250, // Set the width of the image
+                        height: 230,
+                        fit: BoxFit.contain, // Adjust the fit as needed
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
                 FadeIn(
                   delay: const Duration(milliseconds: 500),
                   child: Center(
                     child: SizedBox(
                       height: 50,
                       width: 300,
-                      child: TextFormField(
-                        controller: _usernameController,
-                        decoration: InputDecoration(
-                          hintText: 'Enter User Name',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          prefixIcon: const Icon(Icons.person),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 5),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.grey, // Shadow color
+
+                              blurRadius: 5.0, // Spread radius
+                              offset: Offset(0, 2), // Shadow position
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white, // Background color
                         ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please enter your username';
-                          }
-                          return null;
-                        },
+                        child: TextFormField(
+                          controller: _usernameController,
+                          style: const TextStyle(
+                            color: Colors.blue, // Text color (blue)
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Enter User Name',
+                            hintStyle: const TextStyle(
+                              color: Colors.blue, // Text color (blue)
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide.none, // Remove the border color
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.person,
+                              color: Colors.blue, // Icon color (blue)
+                            ),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 5),
+                            filled: true, // Fill the background with color
+                            fillColor: Colors.white, // Background color (white)
+                          ),
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return 'Please enter your username';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -170,26 +216,52 @@ class _SignUpState extends State<SignUp> {
                     child: SizedBox(
                       height: 50,
                       width: 300,
-                      child: TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          hintText: 'Enter Your Email',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          prefixIcon: const Icon(Icons.email),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 5),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.grey, // Shadow color
+                              blurRadius: 5.0, // Spread radius
+                              offset: Offset(0, 2), // Shadow position
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white, // Background color
                         ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!value.contains('@')) {
-                            return 'Please enter a valid email address';
-                          }
-                          return null;
-                        },
+                        child: TextFormField(
+                          controller: _emailController,
+                          style: const TextStyle(
+                            color: Colors.blue, // Text color (blue)
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Enter Your Email',
+                            hintStyle: const TextStyle(
+                              color: Colors.blue, // Text color (blue)
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide.none, // Remove the border color
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.email,
+                              color: Colors.blue, // Icon color (blue)
+                            ),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 5),
+                            filled: true, // Fill the background with color
+                            fillColor: Colors.white, // Background color (white)
+                          ),
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            if (!value.contains('@')) {
+                              return 'Please enter a valid email address';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -201,27 +273,66 @@ class _SignUpState extends State<SignUp> {
                     child: SizedBox(
                       height: 50,
                       width: 300,
-                      child: TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          hintText: 'Enter New Password',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          prefixIcon: const Icon(Icons.lock),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 5),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.grey, // Shadow color
+                              blurRadius: 5.0, // Spread radius
+                              offset: Offset(0, 2), // Shadow position
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white, // Background color
                         ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please enter a password';
-                          }
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters long';
-                          }
-                          return null;
-                        },
+                        child: TextFormField(
+                          controller: _passwordController,
+                          obscureText: !_isPasswordVisible,
+                          style: const TextStyle(
+                            color: Colors.blue, // Text color (blue)
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Enter New Password',
+                            hintStyle: const TextStyle(
+                              color: Colors.blue, // Text color (blue)
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide.none, // Remove the border color
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.lock,
+                              color: Colors.blue, // Icon color (blue)
+                            ),
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordVisible = !_isPasswordVisible;
+                                });
+                              },
+                              icon: Icon(
+                                _isPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.blue, // Eye icon color (blue)
+                              ),
+                            ),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 5),
+                            filled: true, // Fill the background with color
+                            fillColor: Colors.white, // Background color (white)
+                          ),
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return 'Please enter a password';
+                            }
+                            if (value.length < 6) {
+                              return 'Password must be at least 6 characters long';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -233,27 +344,67 @@ class _SignUpState extends State<SignUp> {
                     child: SizedBox(
                       height: 50,
                       width: 300,
-                      child: TextFormField(
-                        controller: _confirmPasswordController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          hintText: 'Confirm Your Password',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          prefixIcon: const Icon(Icons.lock),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 5),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.grey, // Shadow color
+                              blurRadius: 5.0, // Spread radius
+                              offset: Offset(0, 2), // Shadow position
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white, // Background color
                         ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please confirm your password';
-                          }
-                          if (value != _passwordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
+                        child: TextFormField(
+                          controller: _confirmPasswordController,
+                          obscureText: !_isConfirmPasswordVisible,
+                          style: const TextStyle(
+                            color: Colors.blue, // Text color (blue)
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Confirm Your Password',
+                            hintStyle: const TextStyle(
+                              color: Colors.blue, // Text color (blue)
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide.none, // Remove the border color
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.lock,
+                              color: Colors.blue, // Icon color (blue)
+                            ),
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isConfirmPasswordVisible =
+                                      !_isConfirmPasswordVisible;
+                                });
+                              },
+                              icon: Icon(
+                                _isConfirmPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.blue, // Eye icon color (blue)
+                              ),
+                            ),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 5),
+                            filled: true, // Fill the background with color
+                            fillColor: Colors.white, // Background color (white)
+                          ),
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return 'Please confirm your password';
+                            }
+                            if (value != _passwordController.text) {
+                              return 'Passwords do not match';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -269,7 +420,7 @@ class _SignUpState extends State<SignUp> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            const Color.fromARGB(255, 255, 131, 54),
+                            const Color.fromARGB(255, 107, 155, 238),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 40.0, vertical: 10),
                       ),
@@ -284,57 +435,83 @@ class _SignUpState extends State<SignUp> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: FadeIn(
-                    delay: const Duration(milliseconds: 1500),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.orange),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          'Back to Log In Page',
-                          style: TextStyle(color: Colors.orange, fontSize: 16),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomBarBubble(
-        color: primaryColor,
-        selectedIndex: _index,
-        items: [
-          BottomBarItem(iconData: Icons.home),
-          BottomBarItem(iconData: Icons.category),
-          BottomBarItem(iconData: Icons.person),
+      ]),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color.fromARGB(
+            109, 0, 140, 255), // Make the background transparent
+        elevation: 0, // Remove the shadow
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.category), label: 'Category'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Person'),
         ],
-        onSelect: (index) {
+        currentIndex: _index,
+        onTap: (index) {
           if (index == 0) {
             Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        MainWrapper(isUserLoggedIn: isUserLoggedIn)));
+              context,
+              MaterialPageRoute(
+                builder: (context) => MainWrapper(
+                  isUserLoggedIn: isUserLoggedIn,
+                ),
+              ),
+            );
+          } else if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CategoryScreen(
+                  isUserLoggedIn: isUserLoggedIn,
+                ),
+              ),
+            );
           } else if (index == 1) {
             Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => CategoryScreen(
-                          isUserLoggedIn: isUserLoggedIn,
-                        )));
+              context,
+              MaterialPageRoute(
+                builder: (context) => const Search(),
+              ),
+            );
           }
         },
+
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.black,
+        type: BottomNavigationBarType.fixed,
+        iconSize: 20,
       ),
     );
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: const Color.fromARGB(117, 0, 157, 255),
+      centerTitle: true,
+      title: const Text(
+        "Create Your Account",
+        style: TextStyle(
+          fontSize: 27,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+      ),
+      leading: IconButton(
+        onPressed: () {
+          Navigator.pop(context);
+        },
+        icon: const Icon(
+          Icons.arrow_back_ios_new_outlined,
+          color: Colors.white,
+        ),
+      ),
+    );
+
+    //===================================
   }
 }

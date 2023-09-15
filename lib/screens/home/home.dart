@@ -3,7 +3,9 @@
 import 'dart:async';
 
 import 'package:animate_do/animate_do.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fashion_ecommerce_app/screens/category/category.dart';
 import 'package:fashion_ecommerce_app/screens/category/most_popular.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,7 +16,7 @@ import '../../data/app_data.dart';
 import '../../widget/add_to_cart.dart';
 import '../LogInSignUp/login.dart';
 import '../ProductDetail/details.dart';
-import '../../model/categories_model.dart';
+
 import '../../utils/constants.dart';
 import '../../model/base_model.dart';
 
@@ -36,7 +38,17 @@ class _HomeState extends State<Home> {
   bool isUserLoggedIn = false;
   Set<Object> usedTags = {};
 
-  @override
+  List<String> carouselImages = [
+   
+
+
+    'assets/image2.png',
+    'assets/image1.png',
+   'assets/image3.jpeg',
+    'assets/image4.jpg',
+
+  ];
+
   @override
   void initState() {
     _pageController =
@@ -90,494 +102,532 @@ class _HomeState extends State<Home> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SizedBox(
-        width: size.width,
-        height: size.height,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            /// Top Text
-            SliverToBoxAdapter(
-              child: FadeInUp(
-                delay: const Duration(milliseconds: 300),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: RichText(
-                          text: TextSpan(
-                            text: "Smart",
-                            style: textTheme.headline1,
-                            children: [
-                              TextSpan(
-                                text: " Shopping",
-                                style: textTheme.headline1?.copyWith(
-                                  color: Colors.orange,
-                                  fontSize: 45,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Center(
-                        child: RichText(
-                          text: const TextSpan(
-                            text: "Shop ",
-                            style: TextStyle(
-                              color: Color.fromARGB(186, 0, 0, 0),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: "Smartly :)",
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/account_background1.jpg'),
+                fit: BoxFit.cover, // Adjust the fit as needed
               ),
             ),
+          ),
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top Text
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    FadeInUp(
+                      delay: const Duration(milliseconds: 300),
+                      child: Padding(
+                        padding: const EdgeInsets.all(0.0),
+                        child: Center(
+                          child: RichText(
+                            text: TextSpan(
+                              text: "Smart",
+                              style: textTheme.headline1,
+                              children: [
+                                TextSpan(
+                                  text: " Shopping",
+                                  style: textTheme.headline1?.copyWith(
+                                    color: Colors.blueAccent,
+                                    fontSize: 45,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    )
+                  ],
+                ),
+              ),
+              //=====================================Carousal slider=============================
+              SliverList(
+                delegate: SliverChildListDelegate(
+                  [
+                    FadeInUp(
+                      duration: const Duration(milliseconds: 900),
+                      child: Stack(children: [
+                        CarouselSlider.builder(
+                          itemCount: carouselImages.length,
+                          itemBuilder: (context, index, realIndex) {
+                            final imagePath = carouselImages[index];
+                            return GestureDetector(
+                              onTap: () {
+                                // Handle onTap as needed
+                              },
+                              child: Image.asset(
+                                imagePath,
+                                fit: BoxFit.cover,
+                              ),
+                            );
+                          },
+                          options: CarouselOptions(
+                            autoPlay: true,
+                            enlargeCenterPage: true,
+                            viewportFraction: 1.0,
+                          ),
+                        ),
+                      ]),
+                    )
+                    // Other Positioned widgets...
+                  ],
+                ),
+              ),
 
-            /// Categories
-            SliverToBoxAdapter(
-              child: FadeInUp(
-                delay: const Duration(milliseconds: 450),
-                child: Container(
-                  margin: const EdgeInsets.only(top: 7),
-                  width: size.width,
-                  height: size.height * 0.14,
-                  child: ListView.builder(
+              //========================================End of carousal slider
+
+              SliverToBoxAdapter(
+                child: FadeInUp(
+                  delay: const Duration(milliseconds: 450),
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 7, left: 20),
+                    width: size.width,
+                    height: size.height * 0.14,
+                    child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       scrollDirection: Axis.horizontal,
-                      itemCount: categories.length,
-                      itemBuilder: (ctx, index) {
-                        CategoriesModel current = categories[index];
-                        return Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                CategoryScreen(
-                                                  isUserLoggedIn:
-                                                      isUserLoggedIn,
-                                                )));
-                                  },
-                                  child: CircleAvatar(
+                      child: Center(
+                        child: Wrap(
+                          spacing: 30.0, // Adjust spacing between categories
+                          alignment: WrapAlignment.center,
+                          children: categories.map((current) {
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CategoryScreen(
+                                      isUserLoggedIn: isUserLoggedIn,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Column(
+                                children: [
+                                  CircleAvatar(
                                     radius: 35,
                                     backgroundImage:
                                         AssetImage(current.imageUrl),
                                   ),
+                                  SizedBox(
+                                    height: size.height * 0.008,
+                                  ),
+                                  Text(
+                                    current.title,
+                                    style: textTheme.subtitle1,
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              //Recommended Text
+              SliverToBoxAdapter(
+                child: FadeInUp(
+                  delay: const Duration(milliseconds: 650),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0, vertical: 5.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Recommended For You", style: textTheme.headline3),
+                        // Text("See all", style: textTheme.headline4),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              /// Body Slider Recommended
+              SliverToBoxAdapter(
+                child: FadeInUp(
+                  delay: const Duration(milliseconds: 550),
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 10),
+                 width: size.width,
+                    height: size.height * 0.45,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: getRecommendedProductCount(),
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (context, index) {
+                       
+                          toUse = reProducts;
+                          if (reProducts.length < 6) {
+                            toUse = reProducts + products;
+                          }
+                       
+                        if (index >= toUse.length) return null;
+                        final product = toUse[index];
+                        final recommendedProductIndex = toUse.indexOf(product);
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Details(
+                                  data: product,
+                                  isCameFromMostPopularPart: false,
+                                  isUserLoggedIn: isUserLoggedIn,
+                                  isCameFromLogIn: isCameFromLogIn,
+                                  fromWhere: 0,
                                 ),
-                                SizedBox(
-                                  height: size.height * 0.008,
+                              ),
+                            );
+                          },
+                          child: view(recommendedProductIndex, textTheme, size),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              /// Most Popular Text
+              SliverToBoxAdapter(
+                child: FadeInUp(
+                  delay: const Duration(milliseconds: 650),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0, vertical: 5.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Most Popular", style: textTheme.headline3),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => MostPopular(
+                                        isUserLoggedIn: isUserLoggedIn)));
+                          },
+                          child: Text("See all",
+                              style: textTheme.headline4!
+                                  .copyWith(color: Colors.blueAccent)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              /// Most Popular Content
+              SliverToBoxAdapter(
+                child: FadeInUp(
+                  delay: const Duration(milliseconds: 750),
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 10.0),
+                    width: size.width,
+                    height: size.height * 0.35,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal, // Scroll horizontally
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: popularProducts.length,
+                      itemBuilder: (context, index) {
+                        final current = popularProducts[index];
+                        final heroTag =
+                            '${current.imageUrl}_$index'; // Unique tag for each Hero
+
+                        return GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                FocusManager.instance.primaryFocus?.unfocus();
+                                return Details(
+                                  data: current,
+                                  isCameFromMostPopularPart: true,
+                                  isUserLoggedIn: isUserLoggedIn,
+                                  isCameFromLogIn: isCameFromLogIn,
+                                  fromWhere: 0,
+                                );
+                              },
+                            ),
+                          ),
+                          child: Hero(
+                            tag: heroTag,
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: size.width * 0.5,
+                                  height: size.height * 0.25,
+                                  margin: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(3),
+                                    image: DecorationImage(
+                                      image: NetworkImage(current.imageUrl),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        offset: Offset(0, 4),
+                                        blurRadius: 4,
+                                        color: Color.fromARGB(61, 0, 0, 0),
+                                      )
+                                    ],
+                                  ),
                                 ),
-                                Text(
-                                  current.title,
-                                  style: textTheme.subtitle1,
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2.0),
+                                  child: Text(
+                                    current.name,
+                                    style: textTheme.headline2,
+                                  ),
+                                ),
+                                RichText(
+                                  text: TextSpan(
+                                    text: "\$",
+                                    style: textTheme.subtitle2?.copyWith(
+                                      color: primaryColor,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: current.price.toString(),
+                                        style: textTheme.subtitle2?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         );
-                      }),
-                ),
-              ),
-            ),
-            //Recommended Text
-            SliverToBoxAdapter(
-              child: FadeInUp(
-                delay: const Duration(milliseconds: 650),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0, vertical: 5.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Recommended For You", style: textTheme.headline3),
-                      // Text("See all", style: textTheme.headline4),
-                    ],
+                      },
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            /// Body Slider Recommended
-            SliverToBoxAdapter(
-              child: FadeInUp(
-                delay: const Duration(milliseconds: 550),
-                child: Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  width: size.width,
-                  height: size.height * 0.45,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: getRecommendedProductCount(),
-                    physics: const BouncingScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      if (isUserLoggedIn) {
-                        toUse = reProducts;
-                        if (reProducts.length < 6) {
-                          toUse = reProducts + products;
-                        }
-                      } else {
-                        toUse = products;
-                      }
-                      if (index >= toUse.length) return null;
-                      final product = toUse[index];
-                      final recommendedProductIndex = toUse.indexOf(product);
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => Details(
-                                data: product,
-                                isCameFromMostPopularPart: false,
-                                isUserLoggedIn: isUserLoggedIn,
-                                isCameFromLogIn: isCameFromLogIn,
-                                fromWhere: 0,
-                              ),
-                            ),
-                          );
-                        },
-                        child: view(recommendedProductIndex, textTheme, size),
-                      );
-                    },
+              //More TO love Text
+              SliverToBoxAdapter(
+                child: FadeInUp(
+                  delay: const Duration(milliseconds: 250),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("More To Love", style: textTheme.headline3),
+                        // Text("See all", style: textTheme.headline4),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-
-            /// Most Popular Text
-            SliverToBoxAdapter(
-              child: FadeInUp(
-                delay: const Duration(milliseconds: 650),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0, vertical: 5.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Most Popular", style: textTheme.headline3),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => MostPopular(
-                                      isUserLoggedIn: isUserLoggedIn)));
-                        },
-                        child: Text("See all",
-                            style: textTheme.headline4!
-                                .copyWith(color: Colors.orange)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            /// Most Popular Content
-            SliverToBoxAdapter(
-              child: FadeInUp(
-                delay: const Duration(milliseconds: 750),
-                child: Container(
-                  margin: const EdgeInsets.only(top: 10.0),
-                  width: size.width,
-                  height: size.height * 0.35,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal, // Scroll horizontally
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: popularProducts.length,
-                    itemBuilder: (context, index) {
-                      final current = popularProducts[index];
-                      final heroTag =
-                          '${current.imageUrl}_$index'; // Unique tag for each Hero
-
-                      return GestureDetector(
+              SliverGrid(
+                gridDelegate: getGridDelegate(),
+                delegate: SliverChildBuilderDelegate(
+                  (BuildContext context, int index) {
+                    BaseModel current = products[index];
+                    Object tag = ObjectKey(current.id);
+                    // Ensure the tag is unique
+                    if (usedTags.contains(tag)) {
+                      // Generate a new unique tag if there is a conflict
+                      tag = ObjectKey('${current.id}_$index');
+                    } else {
+                      // Add the tag to the usedTags list
+                      usedTags.add(tag);
+                    }
+                    return FadeInUp(
+                      delay: Duration(milliseconds: 100 * index),
+                      child: GestureDetector(
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) {
-                              FocusManager.instance.primaryFocus?.unfocus();
-                              return Details(
-                                data: current,
-                                isCameFromMostPopularPart: true,
-                                isUserLoggedIn: isUserLoggedIn,
-                                isCameFromLogIn: isCameFromLogIn,
-                                fromWhere: 0,
-                              );
-                            },
+                            builder: (context) => Details(
+                              data: current,
+                              isCameFromMostPopularPart: false,
+                              isUserLoggedIn: isUserLoggedIn,
+                              isCameFromLogIn: isCameFromLogIn,
+                              fromWhere: 2,
+                            ),
                           ),
                         ),
                         child: Hero(
-                          tag: heroTag,
-                          child: Column(
+                          tag: tag,
+                          child: Stack(
+                            alignment: Alignment.center,
                             children: [
-                              Container(
-                                width: size.width * 0.5,
-                                height: size.height * 0.25,
-                                margin: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(3),
-                                  image: DecorationImage(
-                                    image: NetworkImage(current.imageUrl),
-                                    fit: BoxFit.cover,
+                              Positioned(
+                                top: size.height * 0.02,
+                                left: size.width * 0.01,
+                                right: size.width * 0.01,
+                                child: Container(
+                                  width: size.width * 0.5,
+                                  height: size.height * 0.28,
+                                  margin: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(3),
+                                    image: DecorationImage(
+                                      image: NetworkImage(current.imageUrl),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        offset: Offset(0, 4),
+                                        blurRadius: 4,
+                                        color: Color.fromARGB(61, 0, 0, 0),
+                                      ),
+                                    ],
                                   ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      offset: Offset(0, 4),
-                                      blurRadius: 4,
-                                      color: Color.fromARGB(61, 0, 0, 0),
-                                    )
-                                  ],
                                 ),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2.0),
+                              Positioned(
+                                bottom: size.height * 0.04,
                                 child: Text(
                                   current.name,
                                   style: textTheme.headline2,
                                 ),
                               ),
-                              RichText(
-                                text: TextSpan(
-                                  text: "\$",
-                                  style: textTheme.subtitle2?.copyWith(
-                                    color: primaryColor,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: current.price.toString(),
-                                      style: textTheme.subtitle2?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                              Positioned(
+                                bottom: size.height * 0.01,
+                                child: RichText(
+                                  text: TextSpan(
+                                    text: "\$",
+                                    style: textTheme.subtitle2?.copyWith(
+                                      color: primaryColor,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                  ],
+                                    children: [
+                                      TextSpan(
+                                        text: current.price.toString(),
+                                        style: textTheme.subtitle2?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: size.height * 0.01,
+                                right: 0,
+                                child: CircleAvatar(
+                                  backgroundColor: primaryColor,
+                                  child: IconButton(
+                                    onPressed: () {
+                                      if (isUserLoggedIn) {
+                                        AddToCart.addToCart(current, context,
+                                            selectedColor, selectedSize);
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title:
+                                                  const Text('Login Required'),
+                                              content: const Text(
+                                                  'Please log in to add items to your cart.'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text(
+                                                    'Cancel',
+                                                    style: TextStyle(
+                                                        color: Colors.black),
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                Login(
+                                                                  fromWhere: 0,
+                                                                  x: 0,
+                                                                  data: products
+                                                                          .isNotEmpty
+                                                                      ? products[
+                                                                          0]
+                                                                      : BaseModel(
+                                                                          id: 1,
+                                                                          imageUrl:
+                                                                              "imageUrl",
+                                                                          name:
+                                                                              "name",
+                                                                          category:
+                                                                              "category",
+                                                                          price:
+                                                                              1.0,
+                                                                          review:
+                                                                              1.2,
+                                                                          value:
+                                                                              1,
+                                                                          selectedSize:
+                                                                              1,
+                                                                          selectedColor:
+                                                                              1,
+                                                                          type:
+                                                                              "",
+                                                                          color:
+                                                                              "None",
+                                                                              season: 'None'
+                                                                        ),
+                                                                ))); // Close the dialog
+                                                  },
+                                                  child: const Text(
+                                                    'Log In',
+                                                    style: TextStyle(
+                                                        color:
+                                                            Colors.blueAccent),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      }
+                                    },
+                                    icon: const Icon(
+                                      LineIcons.addToShoppingCart,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
+                  childCount: products.length,
                 ),
               ),
-            ),
-
-            //More TO love Text
-            SliverToBoxAdapter(
-              child: FadeInUp(
-                delay: const Duration(milliseconds: 250),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("More To Love", style: textTheme.headline3),
-                      // Text("See all", style: textTheme.headline4),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SliverGrid(
-              gridDelegate: getGridDelegate(),
-              delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int index) {
-                  BaseModel current = products[index];
-                  Object tag = ObjectKey(current.id);
-                  // Ensure the tag is unique
-                  if (usedTags.contains(tag)) {
-                    // Generate a new unique tag if there is a conflict
-                    tag = ObjectKey('${current.id}_$index');
-                  } else {
-                    // Add the tag to the usedTags list
-                    usedTags.add(tag);
-                  }
-                  return FadeInUp(
-                    delay: Duration(milliseconds: 100 * index),
-                    child: GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Details(
-                            data: current,
-                            isCameFromMostPopularPart: false,
-                            isUserLoggedIn: isUserLoggedIn,
-                            isCameFromLogIn: isCameFromLogIn,
-                            fromWhere: 2,
-                          ),
-                        ),
-                      ),
-                      child: Hero(
-                        tag: tag,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Positioned(
-                              top: size.height * 0.02,
-                              left: size.width * 0.01,
-                              right: size.width * 0.01,
-                              child: Container(
-                                width: size.width * 0.5,
-                                height: size.height * 0.28,
-                                margin: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(3),
-                                  image: DecorationImage(
-                                    image: NetworkImage(current.imageUrl),
-                                    fit: BoxFit.cover,
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      offset: Offset(0, 4),
-                                      blurRadius: 4,
-                                      color: Color.fromARGB(61, 0, 0, 0),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: size.height * 0.04,
-                              child: Text(
-                                current.name,
-                                style: textTheme.headline2,
-                              ),
-                            ),
-                            Positioned(
-                              bottom: size.height * 0.01,
-                              child: RichText(
-                                text: TextSpan(
-                                  text: "\$",
-                                  style: textTheme.subtitle2?.copyWith(
-                                    color: primaryColor,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: current.price.toString(),
-                                      style: textTheme.subtitle2?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              top: size.height * 0.01,
-                              right: 0,
-                              child: CircleAvatar(
-                                backgroundColor: primaryColor,
-                                child: IconButton(
-                                  onPressed: () {
-                                    if (isUserLoggedIn) {
-                                      AddToCart.addToCart(current, context,
-                                          selectedColor, selectedSize);
-                                    } else {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: const Text('Login Required'),
-                                            content: const Text(
-                                                'Please log in to add items to your cart.'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                },
-                                                child: const Text(
-                                                  'Cancel',
-                                                  style: TextStyle(
-                                                      color: Colors.orange),
-                                                ),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              Login(
-                                                                fromWhere: 0,
-                                                                x: 0,
-                                                                data: products
-                                                                        .isNotEmpty
-                                                                    ? products[
-                                                                        0]
-                                                                    : BaseModel(
-                                                                        id: 1,
-                                                                        imageUrl:
-                                                                            "imageUrl",
-                                                                        name:
-                                                                            "name",
-                                                                        category:
-                                                                            "category",
-                                                                        price:
-                                                                            1.0,
-                                                                        review:
-                                                                            1.2,
-                                                                        value:
-                                                                            1,
-                                                                        selectedSize:
-                                                                            1,
-                                                                        selectedColor:
-                                                                            1),
-                                                              ))); // Close the dialog
-                                                },
-                                                child: const Text(
-                                                  'Log In',
-                                                  style: TextStyle(
-                                                      color: Colors.orange),
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    }
-                                  },
-                                  icon: const Icon(
-                                    LineIcons.addToShoppingCart,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-                childCount: products.length,
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -611,8 +661,8 @@ class _HomeState extends State<Home> {
           Hero(
             tag: heroTag,
             child: Container(
-              width: size.width * 0.6,
-              height: size.height * 0.35,
+               width: size.width * 0.6,
+              height: size.height * 0.33,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(3),
                 image: DecorationImage(
@@ -671,17 +721,18 @@ class _HomeState extends State<Home> {
 
       try {
         String collectionName =
-            "ContentBasedFiltering"; // Name of the Firestore collection
+            "Recommended"; // Name of the Firestore collection
 
         // Create a reference to the document with the user's email
-        DocumentReference<Map<String, dynamic>> docRef = FirebaseFirestore
-            .instance
-            .collection(collectionName)
-            .doc(userEmail);
+        DocumentReference<Map<String, dynamic>> docRef =
+            FirebaseFirestore.instance.collection(collectionName).doc('data');
 
         // Get the products subcollection for the user's email
+        CollectionReference<Map<String, dynamic>> productsSubcollection =
+            docRef.collection(userEmail);
+
         QuerySnapshot<Map<String, dynamic>> querySnapshot =
-            await docRef.collection('products').get();
+            await productsSubcollection.get();
 
         querySnapshot.docs.forEach((doc) {
           BaseModel product = BaseModel.fromMap(doc.data());
@@ -691,15 +742,50 @@ class _HomeState extends State<Home> {
         print('Error fetching products data: $e');
       }
     } else {
-      print('User not logged in!');
-    }
+        DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      AndroidDeviceInfo androidInfo;
+      String model = '';
+      try {
+        androidInfo = await deviceInfo.androidInfo;
+        model = androidInfo.model;
+        print('Model: $model');
+      } catch (e) {
+        print('Error getting device info: $e');
+      }
 
+       try {
+        String collectionName =
+            "GuestUsers"; // Name of the Firestore collection
+
+        // Create a reference to the document with the user's email
+        DocumentReference<Map<String, dynamic>> docRef =
+            FirebaseFirestore.instance.collection(collectionName).doc(model);
+
+        // Get the products subcollection for the user's email
+        CollectionReference<Map<String, dynamic>> productsSubcollection =
+            docRef.collection('data');
+
+        QuerySnapshot<Map<String, dynamic>> querySnapshot =
+            await productsSubcollection.get();
+
+        querySnapshot.docs.forEach((doc) {
+          BaseModel product = BaseModel.fromMap(doc.data());
+          products.add(product);
+        });
+
+        print(products);
+        print('ProductsFetced');
+      } catch (e) {
+        print('Error fetching products data: $e');
+      }
+      
+    }
     return products;
   }
 
   // Function to get the count of recommended products to show
   int getRecommendedProductCount() {
-    return 6;
+    return 10;
   }
 
   Future<List<BaseModel>> fetchData() async {
@@ -707,7 +793,7 @@ class _HomeState extends State<Home> {
 
     try {
       QuerySnapshot<Map<String, dynamic>> snapshot =
-          await FirebaseFirestore.instance.collection('products').get();
+          await FirebaseFirestore.instance.collection('products2').get();
 
       snapshot.docs.forEach((doc) {
         BaseModel product = BaseModel.fromMap(doc.data());

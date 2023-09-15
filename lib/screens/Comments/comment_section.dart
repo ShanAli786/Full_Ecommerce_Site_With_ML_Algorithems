@@ -15,7 +15,7 @@ class CommentSection extends StatefulWidget {
 }
 
 class _CommentSectionState extends State<CommentSection> {
-  final TextEditingController _commentController = TextEditingController();
+ 
   bool isUserLoggedIn = false;
 
   @override
@@ -39,40 +39,49 @@ class _CommentSectionState extends State<CommentSection> {
     String productName = widget.getProductName;
     return Scaffold(
       appBar: _buildAppBar(context, isUserLoggedIn),
-      body: Column(
-        children: [
-          Expanded(
-            child: _buildCommentsList(productName),
+      body: Stack(
+        children:[ 
+           Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/account_background1.jpg'),
+                fit: BoxFit.cover, // Adjust the fit as needed
+              ),
+            ),
           ),
-          _buildCommentInput(),
-        ],
-      ),
+          Column(
+            
+          children: [
+            const SizedBox(height: 10,), 
+            Expanded(
+              child: _buildCommentsList(productName),
+            ),
+            _buildCommentInput(),
+          ],
+        ),
+     ] ),
     );
   }
 
   AppBar _buildAppBar(BuildContext context, bool isUserLoggedIn) {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+     return AppBar(
+      backgroundColor: const Color.fromARGB(117, 0, 157, 255),
       centerTitle: true,
-      title: FadeIn(
-        delay: const Duration(milliseconds: 200),
-        child: const Text(
-          "Comments Section",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
+      title: const Text(
+        "Comments",
+        style: TextStyle(
+          fontSize: 27,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
         ),
       ),
       leading: IconButton(
         onPressed: () {
-          Navigator.pop(context);
+         Navigator.pop(context);
         },
         icon: const Icon(
-          Icons.arrow_back_rounded,
-          color: Colors.black,
+          Icons.arrow_back_ios_new_outlined,
+          color: Colors.white,
         ),
       ),
     );
@@ -159,69 +168,29 @@ class _CommentSectionState extends State<CommentSection> {
       padding: const EdgeInsets.all(8.0),
       child: FadeIn(
         delay: const Duration(milliseconds: 800),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _commentController,
-                decoration: const InputDecoration(
-                  hintText: 'Write your comment...',
+        child: Center(
+          child: ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            primary: Colors.blue, // Background color
+            minimumSize: const Size(100, 50), // Button size
+          ),
+          child: const Text(
+            'Back',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
                 ),
               ),
-            ),
-            ElevatedButton(
-              onPressed: isUserLoggedIn ? _postComment : null,
-              style: isUserLoggedIn
-                  ? ElevatedButton.styleFrom(
-                      primary: Colors.orange,
-                    )
-                  : ElevatedButton.styleFrom(
-                      primary: Colors.grey,
-                    ),
-              child: const Text(
-                'Post Comment',
-              ),
-            )
-          ],
-        ),
-      ),
-    );
+            );
   }
 
-  void _postComment() {
-    final String commentText = _commentController.text.trim();
-    if (commentText.isNotEmpty) {
-      final FirebaseAuth auth = FirebaseAuth.instance;
-      final User? currentUser = auth.currentUser;
-      if (currentUser != null) {
-        final String commenterName = currentUser.displayName ??
-            'Anonymous'; // Use the user's display name if available
-        final String commenterImage = currentUser.photoURL ??
-            ''; // Use the user's profile image URL if available
-        final String userEmail = currentUser.email ?? '';
-
-        // Assuming you have a variable called `productName` containing the name of the product
-        final String productName =
-            widget.getProductName; // Replace this with the actual product name
-
-        // Store the comment in the "comments" collection inside the specific product's document
-        FirebaseFirestore.instance
-            .collection('comments')
-            .doc(productName)
-            .collection('users')
-            .doc(userEmail)
-            .set({
-          'commenterName': commenterName,
-          'commentText': commentText,
-          'commenterImage': commenterImage,
-          'commenterEmail': currentUser.email,
-        });
-
-        // Clear the input field after posting the comment
-        _commentController.clear();
-      }
-    }
-  }
+ 
 
   void _deleteComment(String productName, String userEmail) {
     FirebaseFirestore.instance

@@ -3,11 +3,12 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fashion_ecommerce_app/admin/home/admin_home.dart';
-import 'package:fashion_ecommerce_app/admin/orders/order_details.dart';
+import 'package:fashion_ecommerce_app/admin/orders/order_details_new.dart';
+
 
 import 'package:flutter/material.dart';
 
-import '../../model/admin/order_model_admin.dart';
+
 
 class ManageOrders extends StatefulWidget {
   const ManageOrders({super.key});
@@ -17,42 +18,120 @@ class ManageOrders extends StatefulWidget {
 }
 
 class _ManageOrdersState extends State<ManageOrders> {
-  List<CustomerOrders> customerOrders = [];
+  List<Map<String, dynamic>> userOrderInfos = [];
+  bool isLoading = true;
 
-  Future<List<CustomerOrders>> fetchData() async {
-    List<CustomerOrders> products = [];
-
+  Future<void> fetchData() async {
+     setState(() {
+    isLoading = true; // Show loading indicator
+  });
     try {
-      // Fetch all user emails from the "users" collection
       QuerySnapshot<Map<String, dynamic>> snapshot =
           await FirebaseFirestore.instance.collection('OrdersForAdmin').get();
-      debugPrint(snapshot.docs.length.toString());
+      print(": TOTAL ORDERS: ${snapshot.docs.length}");
 
-      // Fetch orders for each user from the "orders" collection
-      QuerySnapshot<Map<String, dynamic>> orderSnapshot =
-          (await FirebaseFirestore.instance.collection('OrdersForAdmin').get());
-      orderSnapshot.docs.forEach((orderDoc) {
-        CustomerOrders product = CustomerOrders.fromMap(orderDoc.data());
-        products.add(product);
+      // Create a map to store order numbers as keys and timestamps as values
+      Map<String, Timestamp> orderTimestamps = {};
+
+      // Iterate through the fetched documents and populate the map
+      for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+        Map<String, dynamic> data = doc.data();
+        String orderNo = data['orderNo'];
+        Timestamp timestamp = data['timestamp'];
+
+        // Update the map with the latest timestamp for each order number
+        if (orderTimestamps.containsKey(orderNo)) {
+          if (timestamp.compareTo(orderTimestamps[orderNo]!) > 0) {
+            orderTimestamps[orderNo] = timestamp;
+          }
+        } else {
+          orderTimestamps[orderNo] = timestamp;
+        }
+      }
+
+      // Create a list of order numbers and their latest timestamps
+      List<Map<String, dynamic>> fetchedUserOrderInfos = [];
+      orderTimestamps.forEach((orderNo, timestamp) {
+        fetchedUserOrderInfos.add({
+          'orderNo': orderNo,
+          'timestamp': timestamp,
+        });
+      });
+
+      // Sort the list by timestamp in descending order
+      fetchedUserOrderInfos.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
+
+      setState(() {
+        userOrderInfos = fetchedUserOrderInfos; // Update the state
       });
 
       print("Data Fetched Successful");
+      print("Number of userOrderInfos: ${userOrderInfos.length}");
+       setState(() {
+      isLoading = false; // Data fetched, loading indicator should be hidden
+    });
     } catch (e) {
       print('Error fetching data: $e');
+       setState(() {
+      isLoading = false; // Data fetched, loading indicator should be hidden
+    });
+    }
+  }
+
+  Future<void> deleteOrder(String orderNo) async {
+  try {
+    // Delete orders from the "OrdersForAdmin" collection using the provided orderNo
+    QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+        .collection('OrdersForAdmin')
+        .where('orderNo', isEqualTo: orderNo)
+        .get();
+
+    for (QueryDocumentSnapshot<Map<String, dynamic>> doc in snapshot.docs) {
+      await doc.reference.delete();
     }
 
-    return products;
+    // Remove the deleted order from the userOrderInfos list
+    setState(() {
+      userOrderInfos.removeWhere((orderInfo) => orderInfo['orderNo'] == orderNo);
+    });
+
+    print("Order deleted successfully");
+  } catch (e) {
+    print('Error deleting order: $e');
   }
+}
+
 
   @override
   void initState() {
     super.initState();
-    fetchData().then((data) {
-      setState(() {
-        customerOrders = data;
-        print("Customer Orders ${customerOrders.length}");
-      });
-    });
+    fetchData();
+  }
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: const Color.fromARGB(117, 0, 157, 255),
+      centerTitle: true,
+      title: const Text(
+        "Customer Orders",
+        style: TextStyle(
+          fontSize: 27,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+      ),
+      leading: IconButton(
+    icon: const Icon(
+      Icons.arrow_back, // Use the back arrow icon
+      color: Colors.white,
+      size: 30,
+    ),
+    onPressed: () {
+      Navigator.pop(context);
+    },
+  ),
+     
+    );
+
   }
 
   @override
@@ -60,179 +139,72 @@ class _ManageOrdersState extends State<ManageOrders> {
     var size = MediaQuery.of(context).size;
     var textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: FadeIn(
-          delay: const Duration(milliseconds: 300),
-          child: const Text(
-            "Customer Orders",
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
-            ),
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
-          onPressed: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const AdminHome()));
-          },
-        ),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Fixed table for the header
-          FadeIn(
-            delay: const Duration(milliseconds: 500),
-            child: Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListTile(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text("Order#"),
-                    Text("Detail"),
-                    Text("No of Items"),
-                  ],
+       appBar: _buildAppBar(context),
+      body:Stack(
+        children:[ 
+           Container( decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/account_background1.jpg'),
+                  fit: BoxFit.cover, // Adjust the fit as needed
                 ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: customerOrders.isEmpty
-                ? Center(
-                    child: FadeIn(
-                      delay: const Duration(milliseconds: 600),
-                      child: const Text(
-                        "No orders yet!",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+              ),), 
+          isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.blue,)) // Show loading indicator
+          : userOrderInfos.isEmpty
+            ?  const Center(
+                child:  Text(
+                  "No orders yet!",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            : ListView.builder(
+                itemCount: userOrderInfos.length,
+                itemBuilder: (context, index) {
+                  Map<String, dynamic> userOrderInfo = userOrderInfos[index];
+      
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) =>  OrderDetailsNew(orderNo: userOrderInfo['orderNo'],)));
+                    },
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: ListTile(
+                        leading: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Order No:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              userOrderInfo['orderNo'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        title: Text('Order Date: ${userOrderInfo['timestamp'].toDate().toString()}'),
+                        trailing: GestureDetector(
+                          onTap: () {
+                             deleteOrder(userOrderInfo['orderNo']);
+                          },
+                          child: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                          ),
                         ),
                       ),
                     ),
-                  )
-                : ListView.builder(
-                    itemCount: customerOrders.length,
-                    itemBuilder: (context, index) {
-                      print(customerOrders.length.toString());
-                      CustomerOrders order = customerOrders[index];
-
-                      // Access the order properties
-                      String orderNo = order.orderNo;
-                      String customerName = order.userName;
-                      String shippingAddress = order.shippingAddress;
-                      int numberOfItems = order.quantity;
-                      print(orderNo);
-
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => OrderDetails(
-                                        imageUrl: order.itemPic,
-                                        size: order.size,
-                                        color: order.color,
-                                        productName: order.productName,
-                                        price: order.totalPrice,
-                                        quantity: order.quantity,
-                                        shippingAddress: order.shippingAddress,
-                                        userEmail: order.userEmail,
-                                        orderNo: order.orderNo,
-                                      )));
-                        },
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          child: ListTile(
-                            leading: Text(orderNo),
-                            title: Text(customerName),
-                            subtitle: Text(shippingAddress),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(numberOfItems.toString()),
-                                IconButton(
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: const Text('Delete Order!'),
-                                          content: const Text(
-                                              'Are you sure to delete the order?'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text(
-                                                'Cancel',
-                                                style: TextStyle(
-                                                    color: Colors.orange),
-                                              ),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                                deleteOrder(orderNo);
-                                              },
-                                              child: const Text(
-                                                'Delete',
-                                                style: TextStyle(
-                                                    color: Colors.orange),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  icon: const Icon(Icons.delete),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
+                  );
+                },
+              ),
+     ] ),
     );
-  }
-
-  Future<void> deleteOrder(String orderNo) async {
-    try {
-      // Find the index of the order to delete in the customerOrders list
-      int index =
-          customerOrders.indexWhere((order) => order.orderNo == orderNo);
-
-      if (index != -1) {
-        // Remove the order from the customerOrders list
-        setState(() {
-          customerOrders.removeAt(index);
-        });
-
-        // Delete the order from the database
-        await FirebaseFirestore.instance
-            .collection('OrdersForAdmin')
-            .doc(orderNo)
-            .delete();
-
-        print('Order deleted successfully.');
-      }
-    } catch (e) {
-      print('Error deleting order: $e');
-    }
   }
 }

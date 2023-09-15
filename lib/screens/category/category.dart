@@ -1,13 +1,13 @@
 // ignore_for_file: deprecated_member_use, avoid_function_literals_in_foreach_calls, avoid_print, unused_local_variable
 
 import 'package:animate_do/animate_do.dart';
-import 'package:bottom_bar_matu/bottom_bar/bottom_bar_bubble.dart';
-import 'package:bottom_bar_matu/bottom_bar_item.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fashion_ecommerce_app/data/app_data.dart';
 import 'package:fashion_ecommerce_app/main_wrapper.dart';
 import 'package:fashion_ecommerce_app/model/categories_model.dart';
 import 'package:fashion_ecommerce_app/screens/LogInSignUp/login.dart';
+import 'package:fashion_ecommerce_app/screens/search/search.dart';
 import 'package:fashion_ecommerce_app/utils/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +17,7 @@ import '../../model/base_model.dart';
 import '../../widget/add_to_cart.dart';
 import '../LogInSignUp/user_account.dart';
 import '../ProductDetail/details.dart';
+import '../cart/cart.dart';
 
 class CategoryScreen extends StatefulWidget {
   final bool isUserLoggedIn;
@@ -36,11 +37,20 @@ class _CategoryScreenState extends State<CategoryScreen>
   List<BaseModel> womenProducts = []; // List to store women products
   List<BaseModel> products = [];
   bool isSearchActive = false;
-  final int _index = 1;
+  final int _index = 2;
   Set<Object> usedTags = {};
+  int cartItemCount = 0;
+  void getCartItemCount() async {
+    // Call the getCartItemCount method in the Cart class to retrieve the item count
+    int itemCount = await Cart.getCartItemCount();
+    setState(() {
+      cartItemCount = itemCount;
+    });
+  }
 
   @override
   void initState() {
+    getCartItemCount();
     fetchData().then((data) {
       setState(() {
         products = data;
@@ -52,7 +62,7 @@ class _CategoryScreenState extends State<CategoryScreen>
 
   void updateCategoryProducts() {
     allProducts = getProductsByCategory('all');
-    kidsProducts = getProductsByCategory('kids');
+    kidsProducts = getProductsByCategory('kid');
     menProducts = getProductsByCategory('men');
     womenProducts = getProductsByCategory('women');
   }
@@ -74,10 +84,57 @@ class _CategoryScreenState extends State<CategoryScreen>
           .toList();
     }
   }
+  void handleApplyButton() {
+    double minPrice = double.tryParse(minController.text) ?? 0.0;
+    double maxPrice = double.tryParse(maxController.text) ?? double.infinity;
+
+    if (minPrice > maxPrice) {
+      // Swap min and max values if min is greater than max
+      double temp = minPrice;
+      minPrice = maxPrice;
+      maxPrice = temp;
+    }
+
+    List<BaseModel> filteredProducts =
+        getProductsByCategoryAndRange(selectedCategory, minPrice, maxPrice);
+
+    // Clear the input fields
+    minController.clear();
+    maxController.clear();
+   if (selectedCategory.toLowerCase() == 'all') {
+      allProducts = filteredProducts;
+   } else if(selectedCategory.toLowerCase() == 'men'){
+    menProducts = filteredProducts;
+
+   } else if(selectedCategory.toLowerCase() == 'women'){
+    womenProducts = filteredProducts;
+    
+   } else if(selectedCategory.toLowerCase() == 'kid'){
+    kidsProducts = filteredProducts;
+    
+   }
+    
+  }
+
+  List<BaseModel> getProductsByCategoryAndRange(
+      String category, double min, double max) {
+    if (category.toLowerCase() == 'all') {
+      return products
+          .where((product) => product.price >= min && product.price <= max)
+          .toList();
+    } else {
+      return products
+          .where((product) =>
+              product.category.toLowerCase() == category.toLowerCase() &&
+              product.price >= min &&
+              product.price <= max)
+          .toList();
+    }
+  }
 
   List<BaseModel> getCurrentProducts() {
     // Return the products based on the selected category
-    if (selectedCategory.toLowerCase() == 'kids') {
+    if (selectedCategory.toLowerCase() == 'kid') {
       return kidsProducts;
     } else if (selectedCategory.toLowerCase() == 'men') {
       return menProducts;
@@ -97,6 +154,9 @@ class _CategoryScreenState extends State<CategoryScreen>
     );
   }
 
+TextEditingController minController = TextEditingController();
+TextEditingController maxController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
@@ -111,15 +171,19 @@ class _CategoryScreenState extends State<CategoryScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context, isUserLoggedIn),
-      bottomNavigationBar: BottomBarBubble(
-        color: primaryColor,
-        selectedIndex: _index,
-        items: [
-          BottomBarItem(iconData: Icons.home),
-          BottomBarItem(iconData: Icons.category),
-          BottomBarItem(iconData: Icons.person),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color.fromARGB(
+            109, 0, 140, 255), // Make the background transparent
+        elevation: 0, // Remove the shadow
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.category), label: 'Category'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Person'),
         ],
-        onSelect: (index) {
+        currentIndex: _index,
+        onTap: (index) {
           if (index == 0) {
             Navigator.push(
                 context,
@@ -127,7 +191,7 @@ class _CategoryScreenState extends State<CategoryScreen>
                   builder: (context) =>
                       MainWrapper(isUserLoggedIn: isUserLoggedIn),
                 ));
-          } else if (index == 2 && isUserLoggedIn) {
+          } else if (index == 3 && isUserLoggedIn) {
             FirebaseAuth auth = FirebaseAuth.instance;
             Navigator.push(
                 context,
@@ -135,7 +199,7 @@ class _CategoryScreenState extends State<CategoryScreen>
                     builder: (context) => UserAccount(
                         email: auth.currentUser!.email ?? '',
                         username: auth.currentUser!.displayName ?? '')));
-          } else if (index == 2 && !isUserLoggedIn) {
+          } else if (index == 3 && !isUserLoggedIn) {
             Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -153,54 +217,320 @@ class _CategoryScreenState extends State<CategoryScreen>
                                   review: 1.2,
                                   value: 1,
                                   selectedSize: 1,
-                                  selectedColor: 1),
+                                  selectedColor: 1,
+                                  type: "",
+                                  color: "None",
+                                  season: 'None'
+                                ),
                         )));
+          } else if (index == 1) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const Search(),
+                ));
           }
         },
+
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.black,
+        type: BottomNavigationBarType.fixed,
+        iconSize: 20,
       ),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.only(top: 7),
-              width: size.width,
-              height: size.height * 0.14,
-              child: ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                itemBuilder: (ctx, index) {
-                  CategoriesModel current = categories[index];
-                  bool isSelected = selectedCategory == current.title;
-                  return Padding(
-                    padding: const EdgeInsets.all(10.0),
+       body: Stack(children: [
+        Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/account_background1.jpg'),
+              fit: BoxFit.cover, // Adjust the fit as needed
+            ),
+          ),
+        ),
+        CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Container(
+                margin: const EdgeInsets.only(top: 7),
+                width: size.width,
+                height: size.height * 0.14,
+                child: ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: categories.length,
+                  itemBuilder: (ctx, index) {
+                    CategoriesModel current = categories[index];
+                    bool isSelected = selectedCategory == current.title;
+                    return Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          onCategorySelected(current.title);
+                        },
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 35,
+                                backgroundColor: isSelected
+                                    ? Colors.blueAccent
+                                    : Colors.transparent,
+                                child: CircleAvatar(
+                                  radius: 32,
+                                  backgroundImage: AssetImage(current.imageUrl),
+                                ),
+                              ),
+                              SizedBox(
+                                height: size.height * 0.008,
+                              ),
+                              Text(
+                                current.title,
+                                style: isSelected
+                                    ? textTheme.subtitle1
+                                        ?.copyWith(color: Colors.blueAccent)
+                                    : textTheme.subtitle1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            //==================================================Filters
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Price Range',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: handleApplyButton, 
+                          child: const Text('Apply'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Min',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        controller: minController, // Assign minController here
+                        // Add validation logic if needed
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: 'Max',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        controller: maxController, // Assign maxController here
+                        // Add validation logic if needed
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+                ],
+              ),
+            ),
+            //====================================2nd filter=========================
+          
+            SliverGrid(
+              gridDelegate: getGridDelegate(),
+              delegate: SliverChildBuilderDelegate(
+                (BuildContext context, int index) {
+                  BaseModel current = getCurrentProducts()[index];
+                  Object tag = ObjectKey(current.id);
+                  // Ensure the tag is unique
+                  if (usedTags.contains(tag)) {
+                    // Generate a new unique tag if there is a conflict
+                    tag = ObjectKey('${current.id}_$index');
+                  } else {
+                    // Add the tag to the usedTags list
+                    usedTags.add(tag);
+                  }
+                  return FadeInUp(
+                    delay: Duration(milliseconds: 100 * index),
                     child: GestureDetector(
-                      onTap: () {
-                        onCategorySelected(current.title);
-                      },
-                      child: SingleChildScrollView(
-                        child: Column(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Details(
+                            data: current,
+                            isCameFromMostPopularPart: false,
+                            isUserLoggedIn: isUserLoggedIn,
+                            isCameFromLogIn: isCameFromLogIn,
+                            fromWhere: 2,
+                          ),
+                        ),
+                      ),
+                      child: Hero(
+                        tag: tag,
+                        child: Stack(
+                          alignment: Alignment.center,
                           children: [
-                            CircleAvatar(
-                              radius: 35,
-                              backgroundColor: isSelected
-                                  ? Colors.orange
-                                  : Colors.transparent,
-                              child: CircleAvatar(
-                                radius: 32,
-                                backgroundImage: AssetImage(current.imageUrl),
+                            Positioned(
+                              top: size.height * 0.02,
+                              left: size.width * 0.01,
+                              right: size.width * 0.01,
+                              child: Container(
+                                width: size.width * 0.5,
+                                height: size.height * 0.28,
+                                margin: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(3),
+                                  image: DecorationImage(
+                                    image: NetworkImage(current.imageUrl),
+                                    fit: BoxFit.cover,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      offset: Offset(0, 4),
+                                      blurRadius: 4,
+                                      color: Color.fromARGB(61, 0, 0, 0),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            SizedBox(
-                              height: size.height * 0.008,
+                            Positioned(
+                              bottom: size.height * 0.04,
+                              child: Text(
+                                current.name,
+                                style: textTheme.headline2,
+                              ),
                             ),
-                            Text(
-                              current.title,
-                              style: isSelected
-                                  ? textTheme.subtitle1
-                                      ?.copyWith(color: Colors.orange)
-                                  : textTheme.subtitle1,
+                            Positioned(
+                              bottom: size.height * 0.01,
+                              child: RichText(
+                                text: TextSpan(
+                                  text: "\$",
+                                  style: textTheme.subtitle2?.copyWith(
+                                    color: primaryColor,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: current.price.toString(),
+                                      style: textTheme.subtitle2?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: size.height * 0.01,
+                              right: 0,
+                              child: CircleAvatar(
+                                backgroundColor: primaryColor,
+                                child: IconButton(
+                                  onPressed: () {
+                                    if (isUserLoggedIn) {
+                                      AddToCart.addToCart(current, context,
+                                          selectedColor, selectedSize);
+                                    } else {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: const Text('Login Required'),
+                                            content: const Text(
+                                                'Please log in to add items to your cart.'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text(
+                                                  'Cancel',
+                                                  style: TextStyle(
+                                                      color: Colors.orange),
+                                                ),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              Login(
+                                                                fromWhere: 0,
+                                                                x: x0,
+                                                                data: products
+                                                                        .isNotEmpty
+                                                                    ? products[
+                                                                        0]
+                                                                    : BaseModel(
+                                                                        id: 1,
+                                                                        imageUrl:
+                                                                            "imageUrl",
+                                                                        name:
+                                                                            "name",
+                                                                        category:
+                                                                            "category",
+                                                                        price:
+                                                                            1.0,
+                                                                        review:
+                                                                            1.2,
+                                                                        value:
+                                                                            1,
+                                                                        selectedSize:
+                                                                            1,
+                                                                        selectedColor:
+                                                                            1,
+                                                                        type:
+                                                                            "",
+                                                                        color:
+                                                                            "None",
+                                                                        season:
+                                                                            'None'),
+                                                              ))); // Close the dialog
+                                                },
+                                                child: const Text(
+                                                  'Log In',
+                                                  style: TextStyle(
+                                                      color: Colors.orange),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(
+                                    LineIcons.addToShoppingCart,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -208,184 +538,12 @@ class _CategoryScreenState extends State<CategoryScreen>
                     ),
                   );
                 },
+                childCount: getCurrentProducts().length,
               ),
             ),
-          ),
-          SliverGrid(
-            gridDelegate: getGridDelegate(),
-            delegate: SliverChildBuilderDelegate(
-              (BuildContext context, int index) {
-                BaseModel current = getCurrentProducts()[index];
-                Object tag = ObjectKey(current.id);
-                // Ensure the tag is unique
-                if (usedTags.contains(tag)) {
-                  // Generate a new unique tag if there is a conflict
-                  tag = ObjectKey('${current.id}_$index');
-                } else {
-                  // Add the tag to the usedTags list
-                  usedTags.add(tag);
-                }
-                return FadeInUp(
-                  delay: Duration(milliseconds: 100 * index),
-                  child: GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Details(
-                          data: current,
-                          isCameFromMostPopularPart: false,
-                          isUserLoggedIn: isUserLoggedIn,
-                          isCameFromLogIn: isCameFromLogIn,
-                          fromWhere: 2,
-                        ),
-                      ),
-                    ),
-                    child: Hero(
-                      tag: tag,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Positioned(
-                            top: size.height * 0.02,
-                            left: size.width * 0.01,
-                            right: size.width * 0.01,
-                            child: Container(
-                              width: size.width * 0.5,
-                              height: size.height * 0.28,
-                              margin: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(3),
-                                image: DecorationImage(
-                                  image: NetworkImage(current.imageUrl),
-                                  fit: BoxFit.cover,
-                                ),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    offset: Offset(0, 4),
-                                    blurRadius: 4,
-                                    color: Color.fromARGB(61, 0, 0, 0),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: size.height * 0.04,
-                            child: Text(
-                              current.name,
-                              style: textTheme.headline2,
-                            ),
-                          ),
-                          Positioned(
-                            bottom: size.height * 0.01,
-                            child: RichText(
-                              text: TextSpan(
-                                text: "\$",
-                                style: textTheme.subtitle2?.copyWith(
-                                  color: primaryColor,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                children: [
-                                  TextSpan(
-                                    text: current.price.toString(),
-                                    style: textTheme.subtitle2?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: size.height * 0.01,
-                            right: 0,
-                            child: CircleAvatar(
-                              backgroundColor: primaryColor,
-                              child: IconButton(
-                                onPressed: () {
-                                  if (isUserLoggedIn) {
-                                    AddToCart.addToCart(current, context,
-                                        selectedColor, selectedSize);
-                                  } else {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: const Text('Login Required'),
-                                          content: const Text(
-                                              'Please log in to add items to your cart.'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text(
-                                                'Cancel',
-                                                style: TextStyle(
-                                                    color: Colors.orange),
-                                              ),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            Login(
-                                                              fromWhere: 0,
-                                                              x: x0,
-                                                              data: products.isNotEmpty
-                                                                  ? products[0]
-                                                                  : BaseModel(
-                                                                      id: 1,
-                                                                      imageUrl:
-                                                                          "imageUrl",
-                                                                      name:
-                                                                          "name",
-                                                                      category:
-                                                                          "category",
-                                                                      price:
-                                                                          1.0,
-                                                                      review:
-                                                                          1.2,
-                                                                      value: 1,
-                                                                      selectedSize:
-                                                                          1,
-                                                                      selectedColor:
-                                                                          1),
-                                                            ))); // Close the dialog
-                                              },
-                                              child: const Text(
-                                                'Log In',
-                                                style: TextStyle(
-                                                    color: Colors.orange),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  }
-                                },
-                                icon: const Icon(
-                                  LineIcons.addToShoppingCart,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-              childCount: getCurrentProducts().length,
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ]),
     );
   }
 
@@ -394,7 +552,7 @@ class _CategoryScreenState extends State<CategoryScreen>
 
     try {
       QuerySnapshot<Map<String, dynamic>> snapshot =
-          await FirebaseFirestore.instance.collection('products').get();
+          await FirebaseFirestore.instance.collection('products2').get();
 
       snapshot.docs.forEach((doc) {
         BaseModel product = BaseModel.fromMap(doc.data());
@@ -409,30 +567,73 @@ class _CategoryScreenState extends State<CategoryScreen>
 
   AppBar _buildAppBar(BuildContext context, bool isUserLoggedIn) {
     return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+      backgroundColor: const Color.fromARGB(117, 0, 157, 255),
       centerTitle: true,
       title: const Text(
         "Categories",
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 27,
           fontWeight: FontWeight.w500,
-          color: Colors.black,
+          color: Colors.white,
         ),
       ),
       leading: IconButton(
         onPressed: () {
           Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      MainWrapper(isUserLoggedIn: isUserLoggedIn)));
+              context, MaterialPageRoute(builder: (context) => const Search()));
         },
         icon: const Icon(
-          Icons.arrow_back_rounded,
-          color: Colors.black,
+          Icons.arrow_back_ios_new_outlined,
+          color: Colors.white,
         ),
       ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  LineIcons.shoppingCart,
+                  color: Colors.white,
+                  size: 30,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Cart(
+                        isUserLoggedIn: isUserLoggedIn,
+                        isCameFromUser: false,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              if (cartItemCount >= 0)
+                Positioned(
+                  top: 5,
+                  right: 5,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      cartItemCount.toString(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

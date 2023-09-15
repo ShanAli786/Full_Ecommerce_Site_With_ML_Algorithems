@@ -24,7 +24,7 @@ class ReuseableRowForCart extends StatelessWidget {
         children: [
           Text(text,
               style: textTheme.headline5
-                  ?.copyWith(color: Colors.grey, fontSize: 16)),
+                  ?.copyWith(color: Colors.black, fontSize: 16)),
           ReuseableText(
             price: price,
           )

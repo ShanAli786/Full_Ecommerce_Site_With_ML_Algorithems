@@ -427,10 +427,10 @@ class _SearchState extends State<Search> {
                         /// Main Item List For Searching
 
                         if (isLoading)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 250),
+                          const Padding(
+                            padding: EdgeInsets.only(top: 250),
                             child: Column(
-                              children: const [
+                              children: [
                                 Center(
                                   child: CircularProgressIndicator(
                                       color: Colors.blue),

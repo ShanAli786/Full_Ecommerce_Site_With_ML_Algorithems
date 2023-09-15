@@ -1,8 +1,6 @@
 // ignore_for_file: unused_local_variable, avoid_print, avoid_function_literals_in_foreach_calls, use_build_context_synchronously
 
-import 'package:animate_do/animate_do.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fashion_ecommerce_app/admin/home/admin_home.dart';
 import 'package:fashion_ecommerce_app/admin/orders/order_details_new.dart';
 
 

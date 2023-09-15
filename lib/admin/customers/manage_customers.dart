@@ -401,11 +401,11 @@ class _AdminProfileState extends State<AdminProfile> {
                             BorderRadius.circular(8.0), // Rounded corners
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          children: const [
+                          children: [
                             Icon(Icons.pending_actions), // Your custom icon
                             SizedBox(
                                 width:
@@ -418,7 +418,7 @@ class _AdminProfileState extends State<AdminProfile> {
                             ),
                           ],
                         ),
-                        const Icon(Icons.arrow_forward),
+                        Icon(Icons.arrow_forward),
                       ],
                     ),
                   ),
@@ -447,11 +447,11 @@ class _AdminProfileState extends State<AdminProfile> {
                             BorderRadius.circular(8.0), // Rounded corners
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          children: const [
+                          children: [
                             Icon(
                                 Icons.shopping_bag_rounded), // Your custom icon
                             SizedBox(
@@ -465,7 +465,7 @@ class _AdminProfileState extends State<AdminProfile> {
                             ),
                           ],
                         ),
-                        const Icon(Icons.arrow_forward),
+                        Icon(Icons.arrow_forward),
                       ],
                     ),
                   ),

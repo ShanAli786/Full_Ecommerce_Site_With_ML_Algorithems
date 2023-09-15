@@ -702,13 +702,13 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                     onPressed: () {
                       signInWithGoogle();
                     },
-                    child: SizedBox(
+                    child: const SizedBox(
                       height: 50,
                       width: 240,
                       child: Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: const [
+                          children: [
                             FaIcon(FontAwesomeIcons.google, color: Colors.blue),
                             SizedBox(width: 20),
                             Text(

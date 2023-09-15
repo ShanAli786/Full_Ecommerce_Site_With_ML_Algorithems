@@ -24,7 +24,7 @@ class AdminHome extends StatefulWidget {
 }
 
 class _AdminHomeState extends State<AdminHome> {
-  final int _index = 0;
+ // final int _index = 0;
   DateTime? currentBackPressTime;
 
   // Function to navigate to the "Person" screen

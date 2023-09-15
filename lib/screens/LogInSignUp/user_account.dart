@@ -407,11 +407,11 @@ class _UserAccountState extends State<UserAccount> {
                             BorderRadius.circular(8.0), // Rounded corners
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          children: const [
+                          children: [
                             Icon(Icons.shopping_cart), // Cart icon
                             SizedBox(
                                 width:
@@ -424,7 +424,7 @@ class _UserAccountState extends State<UserAccount> {
                             ),
                           ],
                         ),
-                        const Icon(Icons.arrow_forward),
+                        Icon(Icons.arrow_forward),
                       ],
                     ),
                   ),
@@ -452,11 +452,11 @@ class _UserAccountState extends State<UserAccount> {
                             BorderRadius.circular(8.0), // Rounded corners
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          children: const [
+                          children: [
                             Icon(Icons.shopping_bag), // Your custom icon
                             SizedBox(
                                 width:
@@ -469,7 +469,7 @@ class _UserAccountState extends State<UserAccount> {
                             ),
                           ],
                         ),
-                        const Icon(Icons.arrow_forward),
+                        Icon(Icons.arrow_forward),
                       ],
                     ),
                   ),
@@ -497,11 +497,11 @@ class _UserAccountState extends State<UserAccount> {
                             BorderRadius.circular(8.0), // Rounded corners
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          children: const [
+                          children: [
                             Icon(Icons.done_all), // Your custom icon
                             SizedBox(
                                 width:
@@ -514,7 +514,7 @@ class _UserAccountState extends State<UserAccount> {
                             ),
                           ],
                         ),
-                        const Icon(Icons.arrow_forward),
+                        Icon(Icons.arrow_forward),
                       ],
                     ),
                   ),
@@ -542,11 +542,11 @@ class _UserAccountState extends State<UserAccount> {
                             BorderRadius.circular(8.0), // Rounded corners
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          children: const [
+                          children: [
                             Icon(Icons.contact_mail), // Your custom icon
                             SizedBox(
                                 width:
@@ -559,7 +559,7 @@ class _UserAccountState extends State<UserAccount> {
                             ),
                           ],
                         ),
-                        const Icon(Icons.arrow_forward),
+                        Icon(Icons.arrow_forward),
                       ],
                     ),
                   ),

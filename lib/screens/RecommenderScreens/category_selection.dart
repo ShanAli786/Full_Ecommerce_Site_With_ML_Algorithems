@@ -73,9 +73,9 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                   ),
                   FadeInUp(
                     duration: const Duration(milliseconds: 350),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Text(
                           "Choose your category",
                           style: TextStyle(

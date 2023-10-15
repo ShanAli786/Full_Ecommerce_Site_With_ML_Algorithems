@@ -2,15 +2,18 @@
 
 A new Flutter project.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Project description
+Flutter Base Smart Ecommerce app with machine learning. Backend with Firebase.
+Admin Panal
+voice search
+Visual search using camera
+Filters
+Best Pair Match (Best outfit Generation using Machine Learning)
+Ratings And Reviews
+Login And signup with Google
+Recommender systems using Machine Learning
+Recommendations for new User on the base of Ratings
+Manage Profiles of Customers
+Complete Crud Operations
+Focus on Illiterate peoples
+Complete Documentation and mokups view

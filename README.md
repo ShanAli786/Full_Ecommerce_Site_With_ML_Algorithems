@@ -17,3 +17,4 @@ Manage Profiles of Customers
 Complete Crud Operations
 Focus on Illiterate peoples
 Complete Documentation and mokups view
+https://github.com/ShanAli786/Full_Ecommerce_Site_With_ML_Algorithems/issues/1#issue-1943842858
